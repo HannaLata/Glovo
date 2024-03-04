@@ -1,7 +1,6 @@
 package com.example.glovo.controller;
 
 import com.example.glovo.model.Order;
-import com.example.glovo.model.Product;
 import com.example.glovo.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,16 +27,18 @@ public class OrderController {
     }
 
     @PostMapping("/orders")
-    public ResponseEntity<Void> addOrder(@RequestBody Order order) {
-        orderService.addOrder(order);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<Order> addOrder(@RequestBody Order order) {
+        Order createdOrder = orderService.addOrder(order);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
     @PutMapping("/orders/{orderId}")
-    public ResponseEntity<Void> updateOrder(@PathVariable String orderId, @RequestBody Order updatedOrder) {
-        if (orderService.getOrder(orderId) != null) {
-            orderService.updateOrder(orderId, updatedOrder);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<Order> updateOrder(@PathVariable String orderId, @RequestBody Order updatedOrder) {
+        Order existingOrder = orderService.getOrder(orderId);
+        if (existingOrder != null) {
+            updatedOrder.setId(orderId);
+            Order savedOrder = orderService.updateOrder(updatedOrder);
+            return ResponseEntity.ok(savedOrder);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -53,15 +54,23 @@ public class OrderController {
         }
     }
 
-    @PatchMapping("/orders/{orderId}/products")
-    public ResponseEntity<Void> addProductToOrder(@PathVariable String orderId, @RequestBody Product product) {
-        orderService.addProductToOrder(orderId, product);
-        return ResponseEntity.ok().build();
+    @PatchMapping("/orders/{orderId}/products/{productId}")
+    public ResponseEntity<Order> addProductToOrder(@PathVariable String orderId, @PathVariable String productId) {
+        Order updatedOrder = orderService.addProductToOrder(orderId, productId);
+        if (updatedOrder != null) {
+            return ResponseEntity.ok(updatedOrder);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/orders/{orderId}/products/{productId}")
-    public ResponseEntity<Void> deleteProductFromOrder(@PathVariable String orderId, @PathVariable String productId) {
-        orderService.deleteProductFromOrder(orderId, productId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Order> deleteProductFromOrder(@PathVariable String orderId, @PathVariable String productId) {
+        Order updatedOrder = orderService.deleteProductFromOrder(orderId, productId);
+        if (updatedOrder != null) {
+            return ResponseEntity.ok(updatedOrder);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
